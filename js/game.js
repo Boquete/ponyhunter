@@ -12,6 +12,7 @@ $(document).ready(function() {
         w: null,
         h: null,
         frameTime: 100,
+        cursor_size: 32,
         document: document.body
     };
 
@@ -20,7 +21,8 @@ $(document).ready(function() {
         spawns: new Array(new Vector3D(711, 361, 90), new Vector3D(15, 308, 0)), // template: x, y, rotation
         targets_act: new Array(),
         gen_clock: new Clock(),
-        gen_time: 1000, // ms
+        gen_time: 2000, // ms
+        autokill_time: 3000, // ms - How many ms killtarget will be showed.
 
         /* TEXTS */
         text: {
@@ -46,18 +48,25 @@ $(document).ready(function() {
         this.spawn_id = spawn_id;
         this.sprite.pos = new Vector2D(g.spawns[spawn_id].x, g.spawns[spawn_id].y);
         this.sprite.rotate(g.spawns[spawn_id].z);
+        this.clock = new Clock();
     }
     // pony :D
     // Events
     function onClick(e) {
         var position = $(c.name).position();
-        var x = e.pageX - position.left;
-        var y = e.pageY - position.top;
-
+        var mpos = new Vector2D(e.pageX - position.left + 0.5*c.cursor_size, e.pageY - position.top + 0.5*c.cursor_size);
+        
         if (g.audio.shot.ended || !user.shoted)
         {
             g.audio.shot.play();
             user.shoted = true;
+            // Shoting
+            for(i = 0; i < g.targets_act.length; ++i) {
+                if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos)) {
+                    console.log("Enemy eliminated!");
+                    g.targets_act.splice(i, 1);
+                }
+            }
         }
     }
 
@@ -71,7 +80,7 @@ $(document).ready(function() {
 
     function generateKillTarget() {
         if (g.targets_act.length >= g.spawns.length)
-            return false;
+            return true; // No enought place for next target. STOP.
 
         var spawn_id = getRandomInt(0, g.spawns.length - 1);
         // Checking, is any killtarget on this spawn.
@@ -81,6 +90,12 @@ $(document).ready(function() {
         g.targets_act.push(new KillTarget(spawn_id));
 
         return true;
+    }
+
+    function updateKillTargets() {
+        for (i = 0; i < g.targets_act.length; ++i)
+            if(g.targets_act[i].clock.getElapsedTime() >= g.autokill_time)
+                g.targets_act.splice(i, 1);
     }
 
     function drawKillTargets() {
@@ -96,9 +111,11 @@ $(document).ready(function() {
 
     function logic() {
         if (g.gen_clock.getElapsedTime() >= g.gen_time) {
-            generateKillTarget();
+            while(!generateKillTarget()){}
             g.gen_clock.reset();
         }
+        
+        updateKillTargets();
     }
 
     function paint() {
@@ -110,6 +127,12 @@ $(document).ready(function() {
         drawKillTargets();
         drawScene();
         g.text.header.draw(c.ctx);
+    }
+
+    function preloadOthers() {
+        var pony = new Image();
+        pony.src = "img/pony.png";
+        c.ctx.drawImage(pony, 0, 0);
     }
 
     function init() {
@@ -124,6 +147,7 @@ $(document).ready(function() {
         // Events init
         c.canvas.addEventListener('click', onClick, false);
 
+        preloadOthers();
         setInterval(paint, c.frameTime);
     }
     

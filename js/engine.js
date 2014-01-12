@@ -6,11 +6,20 @@
 
 /* Engine */
 // Rect Class
-function Rect(pos, size, fillStyle) {
+function Rect(pos, size) {
+    this.pos = pos;
+    this.size = size;
+    
+    this.contains = function(coords) {
+        return ((coords.x <= this.size.x + this.pos.x) && (coords.y <= this.size.y + this.pos.y) && (coords.x >= this.pos.x) && (coords.y >= this.pos.y));
+    };
+}
+
+function RectangleShape(pos, size, fillStyle) {
     this.pos = pos;
     this.size = size;
     this.fillStyle = fillStyle;
-
+    
     this.draw = function(ctx) {
         ctx.fillStyle = this.fillStyle;
         ctx.fillRect(pos.x, pos.y, size.x, size.y);
@@ -18,13 +27,12 @@ function Rect(pos, size, fillStyle) {
 }
 
 // Sprite Class
-function Sprite(imgSrc, pos) {
-    if (typeof (pos) === 'undefined')
+function Sprite(imgSrc, pos) { // ctx for preloading images
+    if (typeof(pos) === "undefined")
         this.pos = new Vector2D(0, 0);
     else
         this.pos = pos;
-
-    this.imgSrc = imgSrc;
+    
     this.img = new Image();
     this.img.src = imgSrc;
     this.sc = new Vector2D(1, 1);
@@ -45,8 +53,10 @@ function Sprite(imgSrc, pos) {
         this.rt += rotation * Math.PI / 180;
     };
     this.getSize = function() {
-        var size = new Vector2D(this.img.width, this.img.height);
-        return size;
+        return new Vector2D(this.img.width, this.img.height);
+    };
+    this.getGlobalBounds = function() {
+        return new Rect(this.pos, this.getSize());
     };
 }
 
@@ -88,18 +98,6 @@ function Vector3D(x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
-}
-
-// Rect Class
-function Rect(pos, size, fillStyle) {
-    this.pos = pos;
-    this.size = size;
-    this.fillStyle = fillStyle;
-
-    this.draw = function(ctx) {
-        ctx.fillStyle = this.fillStyle;
-        ctx.fillRect(pos.x, pos.y, size.x, size.y);
-    };
 }
 
 function Clock() {
