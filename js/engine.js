@@ -58,6 +58,10 @@ function Sprite(imgSrc, pos) { // ctx for preloading images
     this.getGlobalBounds = function() {
         return new Rect(this.pos, this.getSize());
     };
+    // Texture
+    this.setTexture = function(url) {
+        this.img.src = url;
+    };
 }
 
 // Text Class
@@ -89,7 +93,7 @@ function Vector2D(x, y) {
         this.y += a.y;
     };
     this.equals = function(a) {
-        return (this.x == a.x && this.y == a.y);
+        return (this.x === a.x && this.y === a.y);
     };
 
 }
@@ -108,7 +112,7 @@ function Clock() {
 
         return act_date - this.startTime;
     };
-    this.reset = function() {
+    this.restart = function() {
         var elapsed = this.getElapsedTime();
         this.startTime = new Date();
 

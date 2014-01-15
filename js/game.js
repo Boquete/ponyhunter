@@ -5,6 +5,9 @@
  */
 
 $(document).ready(function() {
+    //DEFINES
+    var TARGET_COST = 50;
+    
     var c = {
         name: "",
         canvas: null,
@@ -17,16 +20,19 @@ $(document).ready(function() {
     };
 
     var g = {
-        // GAME
+        // GAME - TARGETS
         spawns: new Array(new Vector3D(711, 361, 90), new Vector3D(15, 308, 0)), // template: x, y, rotation
         targets_act: new Array(),
         gen_clock: new Clock(),
         gen_time: 2000, // ms
         autokill_time: 3000, // ms - How many ms killtarget will be showed.
+        afterkill_time: 200, // ms - after kill time (dead pony time),
+        
+        score: 0,
 
         /* TEXTS */
         text: {
-            header: new Text("Pony Hunter", "Arial Black", "black", 24, new Vector2D(10, 10))
+            score: new Text("Score: 0", "Ubuntu", "black", 24, new Vector2D(10, 10))
         },
         gfx: {
             bg: new Sprite("img/bg.png", new Vector2D(0, 0)),
@@ -44,6 +50,7 @@ $(document).ready(function() {
     };
     
     function KillTarget(spawn_id) {
+        this.dead = false;
         this.sprite = new Sprite("img/pony.png");
         this.spawn_id = spawn_id;
         this.sprite.pos = new Vector2D(g.spawns[spawn_id].x, g.spawns[spawn_id].y);
@@ -63,8 +70,7 @@ $(document).ready(function() {
             // Shoting
             for(i = 0; i < g.targets_act.length; ++i) {
                 if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos)) {
-                    console.log("Enemy eliminated!");
-                    g.targets_act.splice(i, 1);
+                    targetEliminate(i);
                 }
             }
         }
@@ -92,14 +98,31 @@ $(document).ready(function() {
         return true;
     }
 
+    function targetEliminate(index) {
+        console.log("Enemy eliminated!");
+        g.score += TARGET_COST;
+        g.targets_act[index].dead = true;
+        g.targets_act[index].sprite.setTexture("img/dead_pony.png");
+        g.targets_act[index].clock.restart();
+    }
+
     function updateKillTargets() {
-        for (i = 0; i < g.targets_act.length; ++i)
+        var to_delete = new Array(); // delete? which? requires for sequrity
+        for (i in g.targets_act) {
+            // Autokill
             if(g.targets_act[i].clock.getElapsedTime() >= g.autokill_time)
-                g.targets_act.splice(i, 1);
+                to_delete.push(i);
+            // if killed (dead texture)
+            if(g.targets_act[i].dead && g.targets_act[i].clock.getElapsedTime() >= g.afterkill_time)
+                to_delete.push(i);
+        }
+        
+        for(i in to_delete)
+            g.targets_act.splice(i, 1);
     }
 
     function drawKillTargets() {
-        for (i = 0; i < g.targets_act.length; ++i)
+        for (var i = 0; i < g.targets_act.length; ++i)
             g.targets_act[i].sprite.draw(c.ctx);
     }
     
@@ -112,9 +135,10 @@ $(document).ready(function() {
     function logic() {
         if (g.gen_clock.getElapsedTime() >= g.gen_time) {
             while(!generateKillTarget()){}
-            g.gen_clock.reset();
+            g.gen_clock.restart();
         }
         
+        g.text.score.string = "Score: " + g.score;
         updateKillTargets();
     }
 
@@ -126,13 +150,16 @@ $(document).ready(function() {
         g.gfx.bg.draw(c.ctx);
         drawKillTargets();
         drawScene();
-        g.text.header.draw(c.ctx);
+        g.text.score.draw(c.ctx);
     }
 
-    function preloadOthers() {
-        var pony = new Image();
-        pony.src = "img/pony.png";
-        c.ctx.drawImage(pony, 0, 0);
+    function preloadData() {
+        var images = ["img/pony.png", "img/dead_pony.png"];
+        for(var i in images) {
+            var img = new Image();
+            img.src = images[i];
+            c.ctx.drawImage(img, 0, 0, 0, 0);
+        }
     }
 
     function init() {
@@ -147,7 +174,7 @@ $(document).ready(function() {
         // Events init
         c.canvas.addEventListener('click', onClick, false);
 
-        preloadOthers();
+        preloadData();
         setInterval(paint, c.frameTime);
     }
     
