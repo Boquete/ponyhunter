@@ -6,26 +6,23 @@
 
 /* Engine */
 // Rect Class
-function Rect(pos, size) {
+function Rect(pos, size, fillStyle) {
     this.pos = pos;
     this.size = size;
     
-    this.contains = function(coords) {
-        return ((coords.x <= this.size.x + this.pos.x) && (coords.y <= this.size.y + this.pos.y) && (coords.x >= this.pos.x) && (coords.y >= this.pos.y));
-    };
-}
-
-function RectangleShape(pos, size, fillStyle) {
-    this.pos = pos;
-    this.size = size;
+    if (typeof(fillStyle) === "undefined")
+        this.fillStyle = "";
+    
     this.fillStyle = fillStyle;
     
     this.draw = function(ctx) {
         ctx.fillStyle = this.fillStyle;
         ctx.fillRect(pos.x, pos.y, size.x, size.y);
     };
+    this.contains = function(coords) {
+        return ((coords.x <= this.size.x + this.pos.x) && (coords.y <= this.size.y + this.pos.y) && (coords.x >= this.pos.x) && (coords.y >= this.pos.y));
+    };
 }
-
 // Sprite Class
 function Sprite(imgSrc, pos) { // ctx for preloading images
     if (typeof(pos) === "undefined")

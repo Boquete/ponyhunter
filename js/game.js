@@ -14,7 +14,7 @@ $(document).ready(function() {
         ctx: null,
         w: null,
         h: null,
-        frameTime: 100,
+        frameTime: 1000/25,
         cursor_size: 32,
         document: document.body
     };
