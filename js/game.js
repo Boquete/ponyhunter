@@ -1,7 +1,25 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * The MIT License
+ *
+ * Copyright 2014 MrPoxipol.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 $(document).ready(function() {
@@ -18,6 +36,15 @@ $(document).ready(function() {
         cursor_size: 32,
         document: document.body
     };
+    
+    var app = {
+        state: "game"
+    };
+    
+    var menu = {
+        bg: new Sprite("img/menu_bg.png"),
+        buttons: new Array(new Button("Play!", new Vector2D(200, 400)))
+    };
 
     var g = {
         // GAME - TARGETS
@@ -32,10 +59,10 @@ $(document).ready(function() {
 
         /* TEXTS */
         text: {
-            score: new Text("Score: 0", "Ubuntu", "black", 24, new Vector2D(10, 10))
+            score: new Text("Score: 0", "24px Ubuntu", "black", new Vector2D(10, 10))
         },
         gfx: {
-            bg: new Sprite("img/bg.png", new Vector2D(0, 0)),
+            bg: new Sprite("img/bg.png"),
             house: new Sprite("img/house.png", new Vector2D(490, 185)),
             tree: new Sprite("img/tree.png", new Vector2D(64, 256)),
             bushes: new Sprite("img/bushes.png", new Vector2D(-71, 343))
@@ -63,15 +90,14 @@ $(document).ready(function() {
         var position = $(c.name).position();
         var mpos = new Vector2D(e.pageX - position.left + 0.5*c.cursor_size, e.pageY - position.top + 0.5*c.cursor_size);
         
-        if (g.audio.shot.ended || !user.shoted)
-        {
+        if (g.audio.shot.ended || !user.shoted) {
             g.audio.shot.play();
             user.shoted = true;
-            // Shoting
-            for(i = 0; i < g.targets_act.length; ++i) {
-                if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos)) {
-                    targetEliminate(i);
-                }
+            if(app.state === "game") {
+                // Shoting
+                for(i = 0; i < g.targets_act.length; ++i)
+                    if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos))
+                        targetEliminate(i);
             }
         }
     }
@@ -133,13 +159,15 @@ $(document).ready(function() {
     }
 
     function logic() {
-        if (g.gen_clock.getElapsedTime() >= g.gen_time) {
-            while(!generateKillTarget()){}
-            g.gen_clock.restart();
+        if(app.state === "game") {
+            if (g.gen_clock.getElapsedTime() >= g.gen_time) {
+                while(!generateKillTarget()){}
+                g.gen_clock.restart();
+            }
+
+            g.text.score.string = "Score: " + g.score;
+            updateKillTargets();
         }
-        
-        g.text.score.string = "Score: " + g.score;
-        updateKillTargets();
     }
 
     function paint() {
@@ -147,10 +175,12 @@ $(document).ready(function() {
         c.ctx.fillStyle = "#000";
         c.ctx.fillRect(0, 0, c.w, c.h);
         // Drawing content
-        g.gfx.bg.draw(c.ctx);
-        drawKillTargets();
-        drawScene();
-        g.text.score.draw(c.ctx);
+        if(app.state === "game") {
+            g.gfx.bg.draw(c.ctx);
+            drawKillTargets();
+            drawScene();
+            g.text.score.draw(c.ctx);
+        }
     }
 
     function preloadData() {
