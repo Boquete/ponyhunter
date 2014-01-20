@@ -1,7 +1,25 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * The MIT License
+ *
+ * Copyright 2014 MrPoxipol.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 /* Engine */
@@ -62,9 +80,9 @@ function Sprite(imgSrc, pos) { // ctx for preloading images
 }
 
 // Text Class
-function Text(string, font, color, size, pos) {
+function Text(string, font, color, pos) {
     this.string = string;
-    this.font = size + "px " + font;
+    this.font = font;
     this.color = color;
 
     this.pos = pos;
@@ -114,6 +132,30 @@ function Clock() {
         this.startTime = new Date();
 
         return elapsed;
+    };
+}
+
+function Color(x, y, z, a) {
+    if (typeof(x) === 'undefined')
+        this.x = this.y = this.z = 0; // None - Black.
+    
+    this.x = x;
+    if (typeof(y) === 'undefined')
+        this.y = this.z = 0; // Red
+    
+    this.y = y;
+    if (typeof(z) === 'undefined')
+        this.z = 0;
+    
+    this.z = z;
+    if (typeof(a) === 'undefined')
+        this.a = 255;
+    
+    this.toCSS = function() {
+        /* Opacity have arleady no support :D 
+         * TODO: add opacity: a;
+         */
+        return "rgb(" + x + ", " + y + ", " + z + ")";
     };
 }
 // Random
