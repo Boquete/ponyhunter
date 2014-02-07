@@ -79,14 +79,24 @@ function Sprite(imgSrc, pos) { // ctx for preloading images
     };
 }
 
+// Font Class (string, uint)
+function Font(family, size) {
+    this.family = family;
+    this.size = size;
+    
+    this.toCSS = function() {
+        return this.size + "px " + this.family;
+    };
+}
+
 // Text Class
 function Text(string, font, color, pos) {
     this.string = string;
-    this.font = font;
+    this.font = font.toCSS();
     this.color = color;
 
     this.pos = pos;
-    this.pos.y += size;
+    this.pos.y += font.size;
 
     this.draw = function(ctx) {
         ctx.font = this.font;
