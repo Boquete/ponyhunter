@@ -38,12 +38,12 @@ $(document).ready(function() {
     };
     
     var app = {
-        state: "game"
+        state: "menu"
     };
     
     var menu = {
         bg: new Sprite("img/menu_bg.png"),
-        buttons: new Array(new Button("Play!", new Vector2D(200, 400)))
+        buttons: new Array(new Button("Play!", new Vector2D(325, 250)))
     };
 
     var g = {
@@ -59,7 +59,7 @@ $(document).ready(function() {
 
         /* TEXTS */
         text: {
-            score: new Text("Score: 0", "24px Ubuntu", "black", new Vector2D(10, 10))
+            score: new Text("Score: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10))
         },
         gfx: {
             bg: new Sprite("img/bg.png"),
@@ -91,6 +91,12 @@ $(document).ready(function() {
         var mpos = new Vector2D(e.pageX - position.left + 0.5*c.cursor_size, e.pageY - position.top + 0.5*c.cursor_size);
         
         if (g.audio.shot.ended || !user.shoted) {
+            
+            /* Chrome 'bug' 
+             * Info: http://stackoverflow.com/a/8959342/2221315*/
+            if(window.chrome)
+                g.audio.shot.load();
+            
             g.audio.shot.play();
             user.shoted = true;
             if(app.state === "game") {
@@ -181,6 +187,11 @@ $(document).ready(function() {
             drawScene();
             g.text.score.draw(c.ctx);
         }
+        else
+        {
+            menu.bg.draw(c.ctx);
+            menu.buttons[0].draw(c.ctx);
+        }
     }
 
     function preloadData() {
@@ -207,6 +218,6 @@ $(document).ready(function() {
         preloadData();
         setInterval(paint, c.frameTime);
     }
-    
+
     init();
 });
