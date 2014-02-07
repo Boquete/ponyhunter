@@ -41,6 +41,21 @@ function Rect(pos, size, fillStyle) {
         return ((coords.x <= this.size.x + this.pos.x) && (coords.y <= this.size.y + this.pos.y) && (coords.x >= this.pos.x) && (coords.y >= this.pos.y));
     };
 }
+
+// StrokeRect Class
+function StrokeRect(pos, size, style /* Usually Border Color */, borderSize) {
+    this.pos = pos;
+    this.size = size;
+    this.style = style;
+    this.borderSize = borderSize;
+    
+    this.draw = function (ctx) {
+        ctx.strokeStyle = this.style;
+        ctx.lineWidth = this.borderSize;
+        ctx.strokeRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
+    };
+}
+
 // Sprite Class
 function Sprite(imgSrc, pos) { // ctx for preloading images
     if (typeof(pos) === "undefined")
@@ -97,7 +112,15 @@ function Text(string, font, color, pos) {
 
     this.pos = pos;
     this.pos.y += font.size;
-
+    
+    this.getSize = function(ctx) {
+        ctx.font = this.font;
+        var tsize = ctx.measureText(this.string);
+        return new Vector2D(tsize.width, parseInt(this.font));
+    };
+    this.getGlobalBounds = function() {
+        return new Rect(this.pos, this.getSize());
+    };
     this.draw = function(ctx) {
         ctx.font = this.font;
         ctx.fillStyle = this.color;
@@ -133,9 +156,9 @@ function Clock() {
     this.startTime = new Date();
     // Methods
     this.getElapsedTime = function() {
-        var act_date = new Date();
+        var actDate = new Date();
 
-        return act_date - this.startTime;
+        return actDate - this.startTime;
     };
     this.restart = function() {
         var elapsed = this.getElapsedTime();
