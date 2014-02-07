@@ -36,6 +36,7 @@ $(document).ready(function() {
         cursor_size: 32,
         document: document.body
     };
+    initCanvas();
     
     var app = {
         state: "menu"
@@ -43,7 +44,7 @@ $(document).ready(function() {
     
     var menu = {
         bg: new Sprite("img/menu_bg.png"),
-        buttons: new Array(new Button("Play!", new Vector2D(325, 250)))
+        buttons: new Array(new Button("Play!", new Vector2D(325, 220), c.ctx))
     };
 
     var g = {
@@ -203,7 +204,7 @@ $(document).ready(function() {
         }
     }
 
-    function init() {
+    function initCanvas() {
         // Canvas init
         c.document.style.cursor = "url('img/cursor.png'), default";
 
@@ -214,7 +215,12 @@ $(document).ready(function() {
         c.h = $(c.name).height();
         // Events init
         c.canvas.addEventListener('click', onClick, false);
+        
+        // Setup canvas for gui
+        gui.canvas_ctx = c.ctx;
+    }
 
+    function init() {
         preloadData();
         setInterval(paint, c.frameTime);
     }
