@@ -24,9 +24,9 @@
 
 /* NO WARRANTY, THIS CODE HADN'T TESTED YET */
 var gui = {
-    size : new Array(/* Button */ new Vector2D(100, 30)),
+    size : new Array(/* Button */ new Vector2D(150, 40)),
     color : new Array(/* Main Color */ new Color(113, 9, 170), /* Buttons font color */ new Color(255, 255, 255), /* Border */ new Color(0, 0, 0)), 
-    font : new Array(/* Main */ "12px Ubuntu", /* Button */ "10px Ubuntu"),
+    font : new Array(new Font("Ubuntu", 15), new Font("Ubuntu", 20)),
     size_def : {
         BUTTON : 0
     },
@@ -43,11 +43,11 @@ var gui = {
 
 function Button(string, pos) {
     this.pos = pos;
-    this.body = new Rect(pos, size, gui.color[gui.color_def.MAIN].toCSS());
-    this.border = new Rect(pos, size, gui.color[gui.color_def.BUTTON_BORDER].toCSS());
+    this.body = new Rect(pos, gui.size[gui.size_def.BUTTON], gui.color[gui.color_def.MAIN].toCSS());
+    this.border = new Rect(pos, gui.size[gui.size_def.BUTTON], gui.color[gui.color_def.BUTTON_BORDER].toCSS());
     
-    var text_pos = new Vector2D(0, 0); // Text align will be added soon..:D, not today :>
-    this.text = new Text(string, gui.font[gui.font_def.BUTTON].toCSS(), gui.color[gui.color_def.BUTTON_FONT].toCSS(), text_pos);
+    var text_pos = new Vector2D(pos.x, pos.y); // Text align will be added soon..:D, not today :>
+    this.text = new Text(string, gui.font[gui.font_def.BUTTON], gui.color[gui.color_def.BUTTON_FONT].toCSS(), text_pos);
     
     // Methods
     this.draw = function(ctx) {
