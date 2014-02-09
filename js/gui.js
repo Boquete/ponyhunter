@@ -47,7 +47,7 @@ var gui = {
     // Widgets Arrays
     buttons : new Array(),
     // Methods
-    setup : function(canvas, canvas_ctx, update_rate, mouse_translation) {
+    setup : function(canvas, canvas_ctx, mouse_translation) {
         if (typeof(mouse_translation) !== "undefined")
             this.mouse_translation = mouse_translation;
         
@@ -60,8 +60,7 @@ var gui = {
         // Mouse pos:
         var position = gui.canvas.getBoundingClientRect();
         var mpos = new Vector2D(e.pageX - position.left + gui.mouse_translation, e.pageY - position.top + gui.mouse_translation);
-        // gui.mouse_translation bug
-        console.log(gui.mouse_translation);
+
         // Update buttons state (focus, etc)
         for(var i in gui.buttons) {
             if(gui.buttons[i].body.contains(mpos))
