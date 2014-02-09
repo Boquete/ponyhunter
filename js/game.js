@@ -43,8 +43,7 @@ $(document).ready(function() {
     };
     
     var menu = {
-        bg: new Sprite("img/menu_bg.png"),
-        buttons: new Array(new Button("Play!", new Vector2D(325, 220), c.ctx))
+        bg: new Sprite("img/menu_bg.png")
     };
 
     var g = {
@@ -53,7 +52,7 @@ $(document).ready(function() {
         targets_act: new Array(),
         gen_clock: new Clock(),
         gen_time: 2000, // ms
-        autokill_time: 3000, // ms - How many ms killtarget will be showed.
+        autokill_time: 3000, // ms - How many ms killtarget is showed.
         afterkill_time: 200, // ms - after kill time (dead pony time),
         
         score: 0,
@@ -191,7 +190,8 @@ $(document).ready(function() {
         else
         {
             menu.bg.draw(c.ctx);
-            menu.buttons[0].draw(c.ctx);
+            gui.draw("menu");
+            //menu.buttons[0].draw(c.ctx);
         }
     }
 
@@ -217,7 +217,8 @@ $(document).ready(function() {
         c.canvas.addEventListener('click', onClick, false);
         
         // Setup canvas for gui
-        gui.canvas_ctx = c.ctx;
+        gui.setup(c.canvas, c.ctx, 0.5*c.cursor_size);
+        gui.addButton(new Button("Play!", new Vector2D(325, 220)), "menu");
     }
 
     function init() {
