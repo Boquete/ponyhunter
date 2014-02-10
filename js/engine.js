@@ -35,7 +35,7 @@ function Rect(pos, size, fillStyle) {
     
     this.draw = function(ctx) {
         ctx.fillStyle = this.fillStyle;
-        ctx.fillRect(pos.x, pos.y, size.x, size.y);
+        ctx.fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
     };
     this.contains = function(coords) {
         return ((coords.x <= this.size.x + this.pos.x) && (coords.y <= this.size.y + this.pos.y) && (coords.x >= this.pos.x) && (coords.y >= this.pos.y));
@@ -168,19 +168,19 @@ function Clock() {
     };
 }
 
-function Color(x, y, z, a) {
-    if (typeof(x) === 'undefined')
-        this.x = this.y = this.z = 0; // None - Black.
+function Color(r, g, b, a) {
+    if (typeof(r) === 'undefined')
+        this.r = this.g = this.b = 0; // None - Black.
     
-    this.x = x;
-    if (typeof(y) === 'undefined')
-        this.y = this.z = 0; // Red
+    this.r = r;
+    if (typeof(g) === 'undefined')
+        this.g = this.b = 0; // Red
     
-    this.y = y;
-    if (typeof(z) === 'undefined')
-        this.z = 0;
+    this.g = g;
+    if (typeof(b) === 'undefined')
+        this.b = 0;
     
-    this.z = z;
+    this.b = b;
     if (typeof(a) === 'undefined')
         this.a = 255;
     
@@ -188,7 +188,7 @@ function Color(x, y, z, a) {
         /* Opacity have arleady no support :D 
          * TODO: add opacity: a;
          */
-        return "rgb(" + x + ", " + y + ", " + z + ")";
+        return "rgb(" + r + ", " + g + ", " + b + ")";
     };
 }
 // Random
