@@ -46,6 +46,7 @@ $(document).ready(function() {
     };
 
     var menu = {
+        author_text: new Text("2014 by MrPoxipol", new Font("Source Sans Pro", 22), "white", new Vector2D(c.w-170, c.h-35))
     };
     
     var g = {
@@ -64,6 +65,7 @@ $(document).ready(function() {
         redscreen_rect: new Rect(new Vector2D(0, 0), new Vector2D(c.w, c.h), "#FF0000"),
         
         score: 0,
+        health_points: 100,
 
         /* TEXTS */
         text: {
@@ -146,11 +148,12 @@ $(document).ready(function() {
     }
 
     function notKilledTargetPunishment() {
-        g.score -= 100;
         if(window.chrome)
             g.audio.pain.load();
 
         g.audio.pain.play();
+        g.score -= 100;
+        g.health_points -= getRandomInt(10, 30); // HAHA, RANDOM!
         g.redscreen_active = true;
         g.redscreen_clock.restart();
     }
@@ -249,6 +252,9 @@ $(document).ready(function() {
             
             gui.draw("menu");
         }
+        
+        if (app.state !== "game")
+            menu.author_text.draw(c.ctx);
         
         requestAnimationFrame(paint);
     }
