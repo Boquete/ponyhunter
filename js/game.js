@@ -32,20 +32,22 @@ $(document).ready(function() {
         ctx: null,
         w: null,
         h: null,
-        frameTime: 1000/25,
+        frameTime: 1000/60,
         cursor_size: 32,
         document: document.body
     };
     initCanvas();
     
     var app = {
-        state: "menu"
-    };
-    
-    var menu = {
-        bg: new Sprite("img/menu_bg.png")
+        state: "menu",
+        step: 0, // Steb for background animation
+        bg: new Sprite("img/bg.png"),
+        bg_cp: new Sprite("img/bg.png", new Vector2D(-c.w, 0))
     };
 
+    var menu = {
+    };
+    
     var g = {
         // GAME - TARGETS
         spawns: new Array(new Vector3D(711, 361, 90), new Vector3D(15, 308, 0)), // template: x, y, rotation
@@ -55,6 +57,12 @@ $(document).ready(function() {
         autokill_time: 3000, // ms - How many ms killtarget is showed.
         afterkill_time: 200, // ms - after kill time (dead pony time),
         
+        // Punishment
+        redscreen_clock: new Clock(),
+        redscreen_time: 500, // ms - time of showing red screen (blood)
+        redscreen_active: false,
+        redscreen_rect: new Rect(new Vector2D(0, 0), new Vector2D(c.w, c.h), "#FF0000"),
+        
         score: 0,
 
         /* TEXTS */
@@ -62,16 +70,16 @@ $(document).ready(function() {
             score: new Text("Score: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10))
         },
         gfx: {
-            bg: new Sprite("img/bg.png"),
             house: new Sprite("img/house.png", new Vector2D(490, 185)),
             tree: new Sprite("img/tree.png", new Vector2D(64, 256)),
             bushes: new Sprite("img/bushes.png", new Vector2D(-71, 343))
         },
         audio: {
-            shot: new Audio("audio/shots/shotgun.wav")
+            shot: new Audio("audio/shots/shotgun.wav"),
+            pain: new Audio("audio/pain/pain2.wav")
         }
     };
-
+    
     var user = {
         shoted: false
     };
@@ -88,10 +96,9 @@ $(document).ready(function() {
     // Events
     function onClick(e) {
         var position = $(c.name).position();
-        var mpos = new Vector2D(e.pageX - position.left + 0.5*c.cursor_size, e.pageY - position.top + 0.5*c.cursor_size);
+        var mpos = new Vector2D(e.pageX - position.left + c.cursor_size/2, e.pageY - position.top + c.cursor_size/2);
         
         if (g.audio.shot.ended || !user.shoted) {
-            
             /* Chrome 'bug' 
              * Info: http://stackoverflow.com/a/8959342/2221315*/
             if(window.chrome)
@@ -138,19 +145,34 @@ $(document).ready(function() {
         g.targets_act[index].clock.restart();
     }
 
+    function notKilledTargetPunishment() {
+        g.score -= 100;
+        if(window.chrome)
+            g.audio.pain.load();
+
+        g.audio.pain.play();
+        g.redscreen_active = true;
+        g.redscreen_clock.restart();
+    }
+
     function updateKillTargets() {
         var to_delete = new Array(); // delete? which? requires for sequrity
         for (i in g.targets_act) {
             // Autokill
             if(g.targets_act[i].clock.getElapsedTime() >= g.autokill_time)
                 to_delete.push(i);
+            
             // if killed (dead texture)
             if(g.targets_act[i].dead && g.targets_act[i].clock.getElapsedTime() >= g.afterkill_time)
                 to_delete.push(i);
         }
         
-        for(i in to_delete)
+        for(i in to_delete) {
+            if(!g.targets_act[i].dead)
+                notKilledTargetPunishment();
+            
             g.targets_act.splice(i, 1);
+        }
     }
 
     function drawKillTargets() {
@@ -163,9 +185,30 @@ $(document).ready(function() {
         g.gfx.bushes.draw(c.ctx);
         g.gfx.tree.draw(c.ctx);
     }
-
+    
+    function moveBackground() {
+        app.step += 0.5;
+        app.bg.pos.x = -(app.step*0.6);
+        app.bg.pos.x %= 800*2;
+        if(app.bg.pos.x < 0) app.bg.pos.x += 800*2;
+        app.bg.pos.x -= 800;
+        app.bg.pos.x = Math.floor(app.bg.pos.x);
+        
+        app.bg_cp.pos.x = -(app.step*0.6) + 800;
+        app.bg_cp.pos.x %= 800*2;
+        if(app.bg_cp.pos.x < 0) app.bg_cp.pos.x += 800*2;
+        app.bg_cp.pos.x -= 800;
+        app.bg_cp.pos.x = Math.floor(app.bg_cp.pos.x);
+        
+        requestAnimationFrame(moveBackground);
+    }
+    
     function logic() {
         if(app.state === "game") {
+            if (g.redscreen_active) {
+                g.redscreen_active = (g.redscreen_clock.getElapsedTime() <= g.redscreen_time);
+            }
+            
             if (g.gen_clock.getElapsedTime() >= g.gen_time) {
                 while(!generateKillTarget()){}
                 g.gen_clock.restart();
@@ -181,17 +224,30 @@ $(document).ready(function() {
         c.ctx.fillStyle = "#000";
         c.ctx.fillRect(0, 0, c.w, c.h);
         // Drawing content
+        // Background animation:
+        app.bg.draw(c.ctx);
+        app.bg_cp.draw(c.ctx);
         if(app.state === "game") {
-            g.gfx.bg.draw(c.ctx);
             drawKillTargets();
             drawScene();
             g.text.score.draw(c.ctx);
+            
+            if(g.redscreen_active) {
+                // Transparent
+                c.ctx.globalAlpha = 0.8;
+                g.redscreen_rect.draw(c.ctx);
+                c.ctx.globalAlpha = 1.0;
+            }
         }
-        else
+        else if(app.state === "menu")
         {
-            menu.bg.draw(c.ctx);
+            
+            c.ctx.globalAlpha = 0.624;
+            c.ctx.fillStyle = 'black';
+            c.ctx.fillRect(0, 0, c.w, c.h);
+            c.ctx.globalAlpha = 1.0;
+            
             gui.draw("menu");
-            //menu.buttons[0].draw(c.ctx);
         }
     }
 
@@ -202,6 +258,12 @@ $(document).ready(function() {
             img.src = images[i];
             c.ctx.drawImage(img, 0, 0, 0, 0);
         }
+    }
+    // GUI Callbacks
+    function onMenuStartButtonClicked() {
+        app.state = "game";
+        gui.setScene("game");
+        console.log("clicked!");
     }
 
     function initCanvas() {
@@ -214,17 +276,20 @@ $(document).ready(function() {
         c.w = $(c.name).width();
         c.h = $(c.name).height();
         // Events init
-        c.canvas.addEventListener('click', onClick, false);
+        c.canvas.addEventListener("click", onClick, false);
         
-        // Setup canvas for gui
-        gui.setup(c.canvas, c.ctx, 0.5*c.cursor_size);
-        gui.addButton(new Button("Play!", new Vector2D(325, 220)), "menu");
+        gui.setup(c.canvas, c.ctx, "menu", 0.5*c.cursor_size);
+        var menu_start_button = new Button("Play!", new Vector2D(325, 220));
+            menu_start_button.click(onMenuStartButtonClicked);
+            
+        gui.addButton(menu_start_button, "menu");
     }
 
     function init() {
         preloadData();
         setInterval(paint, c.frameTime);
+        requestAnimationFrame(moveBackground);
     }
-
+    
     init();
 });
