@@ -249,6 +249,8 @@ $(document).ready(function() {
             
             gui.draw("menu");
         }
+        
+        requestAnimationFrame(paint);
     }
 
     function preloadData() {
@@ -287,7 +289,7 @@ $(document).ready(function() {
 
     function init() {
         preloadData();
-        setInterval(paint, c.frameTime);
+        requestAnimationFrame(paint);
         requestAnimationFrame(moveBackground);
     }
     
