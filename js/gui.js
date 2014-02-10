@@ -22,10 +22,10 @@
  * THE SOFTWARE.
  */
 
-/* NO WARRANTY, THIS CODE HADN'T TESTED YET */
 var gui = {
     canvas: null,
     canvas_ctx: null,
+    actual_scene : null,
     size : new Array(/* Button */ new Vector2D(150, 40)),
     color : new Array(/* Main Color */ new Color(113, 9, 170), /* Buttons font color */ new Color(255, 255, 255), /* Border */ new Color(0, 0, 0), /* Main II */ new Color(140, 15, 209)), 
     font : new Array(new Font("Ubuntu", 15), new Font("Ubuntu", 20)),
@@ -47,13 +47,27 @@ var gui = {
     // Widgets Arrays
     buttons : new Array(),
     // Methods
-    setup : function(canvas, canvas_ctx, mouse_translation) {
+    setup : function(canvas, canvas_ctx, scene, mouse_translation) {
         if (typeof(mouse_translation) !== "undefined")
             this.mouse_translation = mouse_translation;
         
         this.canvas = canvas;
         this.canvas_ctx = canvas_ctx;
+        this.actual_scene = scene;
         this.canvas.addEventListener("mousemove", this.mouseFocus, false);
+        this.canvas.addEventListener("click", this.mouseClick, false);
+    },
+    mouseClick : function(e) {
+        // Function called on canvas object, so: this = canvas, not the gui class!
+        // Mouse pos:
+        var position = gui.canvas.getBoundingClientRect();
+        var mpos = new Vector2D(e.pageX - position.left + gui.mouse_translation, e.pageY - position.top + gui.mouse_translation);
+        
+        // For buttons
+        for (var i in gui.buttons)
+            if(gui.buttons[i].scene === gui.actual_scene)
+                if(gui.buttons[i].click_cb && gui.buttons[i].body.contains(mpos))
+                    gui.buttons[i].click_cb();
     },
     mouseFocus : function(e) {
         // Function called on canvas object, so: this = canvas, not the gui class!
@@ -62,12 +76,18 @@ var gui = {
         var mpos = new Vector2D(e.pageX - position.left + gui.mouse_translation, e.pageY - position.top + gui.mouse_translation);
 
         // Update buttons state (focus, etc)
-        for(var i in gui.buttons) {
-            if(gui.buttons[i].body.contains(mpos))
-                gui.buttons[i].setBodyColor(gui.color[gui.color_def.MAIN_OT]);
-            else
-                gui.buttons[i].setBodyColor(gui.color[gui.color_def.MAIN]);
-        }
+        for(var i in gui.buttons)
+            if(gui.buttons[i].scene === gui.actual_scene)
+                if(gui.buttons[i].body.contains(mpos))
+                    gui.buttons[i].setBodyColor(gui.color[gui.color_def.MAIN_OT]);
+                else
+                    gui.buttons[i].setBodyColor(gui.color[gui.color_def.MAIN]);
+    },
+    setScene: function(scene) {
+        if(typeof(scene) === "undefined")
+            return;
+        
+        this.actual_scene = scene;
     },
     addButton: function(object, scene) {
         this.buttons.push(object);
@@ -75,10 +95,10 @@ var gui = {
     },
     draw: function(scene) {
         if (typeof(scene) === "undefined") {
-            console.log("GUI: Scene is undefined. Gui drawing failed.");
+            scene = this.actual_scene;
             return false;
         }
-        
+      
         // Buttons drawing
         for (var i in this.buttons)
             if(this.buttons[i].scene === scene)
@@ -100,6 +120,9 @@ function Button(string, pos) {
     this.text.pos.x += (this.body.size.x / 2) - (this.text.getSize(gui.canvas_ctx).x / 2);
     this.text.pos.y += (this.body.size.y / 2) - (this.text.getSize(gui.canvas_ctx).y / 2);
     
+    // Calbacks
+    this.click_cb = null;
+    
     // Methods
     this.draw = function() {
         this.body.draw(gui.canvas_ctx);
@@ -108,5 +131,9 @@ function Button(string, pos) {
     };
     this.setBodyColor = function(color) {
         this.body.fillStyle = color.toCSS();
+    };
+    // Events
+    this.click = function(callback) {
+        this.click_cb = callback;
     };
 }
