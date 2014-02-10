@@ -32,3 +32,9 @@ THE SOFTWARE.
   font-weight: 300;
   src: local('Source Sans Pro Light'), local('SourceSansPro-Light'), url(../font/SourceSansPro-ExtraLight.ttf) format('truetype');
 }
+@font-face {
+  font-family: 'Ubuntu';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu'), url(../font/Ubuntu-Regular.ttf) format('truetype');
+}
