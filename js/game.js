@@ -50,6 +50,8 @@ $(document).ready(function() {
     };
     
     var g = {
+        play_clock: new Clock(),
+        
         // GAME - TARGETS
         spawns: new Array(new Vector3D(711, 361, 90), new Vector3D(15, 308, 0)), // template: x, y, rotation
         targets_act: new Array(),
@@ -66,10 +68,14 @@ $(document).ready(function() {
         
         score: 0,
         health_points: 100,
+        time_end_score: 0,
 
         /* TEXTS */
         text: {
-            score: new Text("Score: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10))
+            score: new Text("Score: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10)),
+            time: new Text("Time: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10)),
+            gameover: new Text("Game Over", new Font("Equestria", 120), "black", new Vector2D(c.w/2, 100)),
+            gameover_score: new Text("Your score: ", new Font("Ubuntu", 24), "black", new Vector2D(c.w/2, 220))
         },
         gfx: {
             house: new Sprite("img/house.png", new Vector2D(490, 185)),
@@ -79,7 +85,11 @@ $(document).ready(function() {
         audio: {
             shot: new Audio("audio/shots/shotgun.wav"),
             pain: new Audio("audio/pain/pain2.wav")
-        }
+        },
+        rect: {
+            hp_border: new StrokeRect(new Vector2D(680, 10), new Vector2D(110, 30), "white", 1),
+            hp_bar: new Rect(new Vector2D(685, 15), new Vector2D(100, 20), "#ff3333")
+        },
     };
     
     var user = {
@@ -151,9 +161,18 @@ $(document).ready(function() {
         if(window.chrome)
             g.audio.pain.load();
 
-        g.audio.pain.play();
         g.score -= 100;
         g.health_points -= getRandomInt(10, 30); // HAHA, RANDOM!
+        if (g.health_points <= 0) {
+            g.health_points = 0; // For health_bar
+            
+            var dead_snd = new Audio("audio/pain/die2.wav");
+            dead_snd.play();
+        }
+        else
+            g.audio.pain.play();
+        
+        
         g.redscreen_active = true;
         g.redscreen_clock.restart();
     }
@@ -182,6 +201,11 @@ $(document).ready(function() {
         for (var i = 0; i < g.targets_act.length; ++i)
             g.targets_act[i].sprite.draw(c.ctx);
     }
+
+    function drawHpBar() {
+        g.rect.hp_border.draw(c.ctx);
+        g.rect.hp_bar.draw(c.ctx);
+    }
     
     function drawScene() {
         g.gfx.house.draw(c.ctx);
@@ -192,15 +216,15 @@ $(document).ready(function() {
     function moveBackground() {
         app.step += 0.5;
         app.bg.pos.x = -(app.step*0.6);
-        app.bg.pos.x %= 800*2;
-        if(app.bg.pos.x < 0) app.bg.pos.x += 800*2;
-        app.bg.pos.x -= 800;
+        app.bg.pos.x %= c.w*2;
+        if(app.bg.pos.x < 0) app.bg.pos.x += c.w*2;
+        app.bg.pos.x -= c.w;
         app.bg.pos.x = Math.floor(app.bg.pos.x);
         
-        app.bg_cp.pos.x = -(app.step*0.6) + 800;
-        app.bg_cp.pos.x %= 800*2;
-        if(app.bg_cp.pos.x < 0) app.bg_cp.pos.x += 800*2;
-        app.bg_cp.pos.x -= 800;
+        app.bg_cp.pos.x = -(app.step*0.6) + c.w;
+        app.bg_cp.pos.x %= c.w*2;
+        if(app.bg_cp.pos.x < 0) app.bg_cp.pos.x += c.w*2;
+        app.bg_cp.pos.x -= c.w;
         app.bg_cp.pos.x = Math.floor(app.bg_cp.pos.x);
         
         requestAnimationFrame(moveBackground);
@@ -217,8 +241,20 @@ $(document).ready(function() {
                 g.gen_clock.restart();
             }
 
-            g.text.score.string = "Score: " + g.score;
             updateKillTargets();
+            if(g.health_points <= 0 && !g.redscreen_active)
+            {
+                app.state = "over";
+                gui.setScene("over");
+                g.time_end_score = Math.round(g.play_clock.getElapsedTime()/100);
+            }
+            
+            // Info
+            g.text.score.string = "Score: " + g.score;
+            console.log(g.text.score.getSize(c.ctx).x);
+            g.text.time.pos.x = g.text.score.getSize(c.ctx).x + 20;
+            g.text.time.string = "Time: " + Math.round(g.play_clock.getElapsedTime()/1000);
+            g.rect.hp_bar.size.x = g.health_points;
         }
     }
 
@@ -234,6 +270,10 @@ $(document).ready(function() {
             drawKillTargets();
             drawScene();
             g.text.score.draw(c.ctx);
+            g.text.time.draw(c.ctx);
+            drawHpBar();
+            
+            gui.draw("game");
             
             if(g.redscreen_active) {
                 // Transparent
@@ -252,6 +292,16 @@ $(document).ready(function() {
             
             gui.draw("menu");
         }
+        else if(app.state === "over")
+        {
+            // Game over screen
+            c.ctx.textAlign = "center";
+            g.text.gameover.draw(c.ctx);
+            g.text.gameover_score.string = "Your score: " + (g.score + g.time_end_score);
+            g.text.gameover_score.draw(c.ctx);
+            c.ctx.textAlign = "left";
+            gui.draw("over");
+        }
         
         if (app.state !== "game")
             menu.author_text.draw(c.ctx);
@@ -267,11 +317,34 @@ $(document).ready(function() {
             c.ctx.drawImage(img, 0, 0, 0, 0);
         }
     }
+    
+    function restartGame() {
+        g.redscreen_active = false;
+        g.score = 0;
+        g.health_points = 100;
+        g.targets_act = new Array();
+        // Timers
+        g.gen_clock.restart();
+        g.play_clock.restart();
+    }
     // GUI Callbacks
     function onMenuStartButtonClicked() {
+        restartGame();
         app.state = "game";
         gui.setScene("game");
         console.log("clicked!");
+    }
+    
+    function onPauseButtonClicked() {
+        app.state = "pause";
+        gui.setScene("pause");
+    }
+    
+    function onTryAgainButtonClicked() {
+        // Reset
+        restartGame();
+        app.state = "game";
+        gui.setScene("game");
     }
 
     function initCanvas() {
@@ -290,7 +363,15 @@ $(document).ready(function() {
         var menu_start_button = new Button("Play!", new Vector2D(325, 220));
             menu_start_button.click(onMenuStartButtonClicked);
             
+        var pause_button = new Button("Pause", new Vector2D(325, 10));
+            pause_button.click(onPauseButtonClicked);    
+            
+        var try_again_button = new Button("Try Again!", new Vector2D(325, 300));
+            try_again_button.click(onTryAgainButtonClicked);
+            
         gui.addButton(menu_start_button, "menu");
+        gui.addButton(pause_button, "game");
+        gui.addButton(try_again_button, "over");
     }
 
     function init() {
