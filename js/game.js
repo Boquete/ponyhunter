@@ -251,7 +251,6 @@ $(document).ready(function() {
             
             // Info
             g.text.score.string = "Score: " + g.score;
-            console.log(g.text.score.getSize(c.ctx).x);
             g.text.time.pos.x = g.text.score.getSize(c.ctx).x + 20;
             g.text.time.string = "Time: " + Math.round(g.play_clock.getElapsedTime()/1000);
             g.rect.hp_bar.size.x = g.health_points;
@@ -292,6 +291,16 @@ $(document).ready(function() {
             
             gui.draw("menu");
         }
+        else if(app.state === "pause")
+        {
+            
+            c.ctx.globalAlpha = 0.624;
+            c.ctx.fillStyle = 'black';
+            c.ctx.fillRect(0, 0, c.w, c.h);
+            c.ctx.globalAlpha = 1.0;
+            
+            gui.draw("pause");
+        }
         else if(app.state === "over")
         {
             // Game over screen
@@ -314,7 +323,7 @@ $(document).ready(function() {
         for(var i in images) {
             var img = new Image();
             img.src = images[i];
-            c.ctx.drawImage(img, 0, 0, 0, 0);
+            //c.ctx.drawImage(img, 0, 0, 0, 0);
         }
     }
     
@@ -336,12 +345,32 @@ $(document).ready(function() {
     }
     
     function onPauseButtonClicked() {
+        g.play_clock.pause();
+        for(var i in g.targets_act) {
+            g.targets_act[i].clock.pause();
+        }
         app.state = "pause";
         gui.setScene("pause");
     }
     
     function onTryAgainButtonClicked() {
         // Reset
+        restartGame();
+        app.state = "game";
+        gui.setScene("game");
+    }
+
+    function onBackButtonClicked() {
+        g.play_clock.resume();
+        for(var i in g.targets_act) {
+            g.targets_act[i].clock.resume();
+        }
+        
+        app.state = "game";
+        gui.setScene("game");
+    }
+
+    function onMenuRestartButtonClicked() {
         restartGame();
         app.state = "game";
         gui.setScene("game");
@@ -369,9 +398,17 @@ $(document).ready(function() {
         var try_again_button = new Button("Try Again!", new Vector2D(325, 300));
             try_again_button.click(onTryAgainButtonClicked);
             
+        var restart_button = new Button("Restart!", new Vector2D(325, 200));
+            restart_button.click(onMenuRestartButtonClicked);
+        
+        var back_button = new Button("Resume", new Vector2D(325, 150));
+            back_button.click(onBackButtonClicked);
+        
         gui.addButton(menu_start_button, "menu");
         gui.addButton(pause_button, "game");
         gui.addButton(try_again_button, "over");
+        gui.addButton(restart_button, "pause");
+        gui.addButton(back_button, "pause");        
     }
 
     function init() {
