@@ -153,19 +153,35 @@ function Vector3D(x, y, z) {
 }
 
 function Clock() {
-    this.startTime = new Date();
+    this.total = 0;
+    this.id = null;
     // Methods
-    this.getElapsedTime = function() {
-        var actDate = new Date();
-
-        return actDate - this.startTime;
+    this.pause = function() {
+        clearTimeout(this.id);
+        delete this.id;
+    };
+    this.count = function() {
+        if(!this.total) this.total = 0;
+        
+        this.total += 10; // browser max (10 ms)
+    };
+    this.resume = function() {
+        if(!this.id)
+            this.id = setInterval(this.count.bind(this), 10);
     };
     this.restart = function() {
         var elapsed = this.getElapsedTime();
-        this.startTime = new Date();
-
+        this.total = 0;
+        this.resume();
+ 
         return elapsed;
     };
+    this.getElapsedTime = function() {
+        console.log(this.total); // 0
+        return this.total;
+    };
+    
+    this.resume();
 }
 
 function Color(r, g, b, a) {
