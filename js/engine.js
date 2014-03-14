@@ -177,7 +177,6 @@ function Clock() {
         return elapsed;
     };
     this.getElapsedTime = function() {
-        console.log(this.total); // 0
         return this.total;
     };
     
