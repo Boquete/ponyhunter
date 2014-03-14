@@ -83,6 +83,7 @@ $(document).ready(function() {
             bushes: new Sprite("img/bushes.png", new Vector2D(-71, 343))
         },
         audio: {
+            ingame_bg: new Audio("audio/game_bg.ogg"),
             shot: new Audio("audio/shots/shotgun.wav"),
             pain: new Audio("audio/pain/pain2.wav")
         },
@@ -150,7 +151,6 @@ $(document).ready(function() {
     }
 
     function targetEliminate(index) {
-        console.log("Enemy eliminated!");
         g.score += TARGET_COST;
         g.targets_act[index].dead = true;
         g.targets_act[index].sprite.setTexture("img/dead_pony.png");
@@ -178,7 +178,7 @@ $(document).ready(function() {
     }
 
     function updateKillTargets() {
-        var to_delete = new Array(); // delete? which? requires for sequrity
+        var to_delete = new Array(); // delete? which? required for sequrity
         for (i in g.targets_act) {
             // Autokill
             if(g.targets_act[i].clock.getElapsedTime() >= g.autokill_time)
@@ -244,6 +244,8 @@ $(document).ready(function() {
             updateKillTargets();
             if(g.health_points <= 0 && !g.redscreen_active)
             {
+                g.audio.ingame_bg.pause();
+                
                 app.state = "over";
                 gui.setScene("over");
                 g.time_end_score = Math.round(g.play_clock.getElapsedTime()/100);
@@ -341,7 +343,13 @@ $(document).ready(function() {
         restartGame();
         app.state = "game";
         gui.setScene("game");
-        console.log("clicked!");
+        
+        g.audio.ingame_bg.addEventListener('ended', function() {
+            this.currentTime = 0;
+            this.play();
+        }, false);
+        
+        g.audio.ingame_bg.play();
     }
     
     function onPauseButtonClicked() {
@@ -351,6 +359,8 @@ $(document).ready(function() {
         }
         app.state = "pause";
         gui.setScene("pause");
+        
+        g.audio.ingame_bg.pause();
     }
     
     function onTryAgainButtonClicked() {
@@ -358,6 +368,12 @@ $(document).ready(function() {
         restartGame();
         app.state = "game";
         gui.setScene("game");
+        
+        g.audio.ingame_bg.play();
+        g.audio.ingame_bg.addEventListener('ended', function() {
+            this.currentTime = 0;
+            this.play();
+        }, false);
     }
 
     function onBackButtonClicked() {
@@ -368,12 +384,24 @@ $(document).ready(function() {
         
         app.state = "game";
         gui.setScene("game");
+        
+        g.audio.ingame_bg.play();
+        g.audio.ingame_bg.addEventListener('ended', function() {
+            this.currentTime = 0;
+            this.play();
+        }, false);
     }
 
     function onMenuRestartButtonClicked() {
         restartGame();
         app.state = "game";
         gui.setScene("game");
+        
+        g.audio.ingame_bg.play();
+        g.audio.ingame_bg.addEventListener('ended', function() {
+            this.currentTime = 0;
+            this.play();
+        }, false);
     }
 
     function initCanvas() {
