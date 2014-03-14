@@ -262,7 +262,7 @@ $(document).ready(function() {
             updateKillTargets();
             if(g.health_points <= 0 && !g.redscreen_active)
             {
-                //g.audio.ingame_bg.pause();
+                g.audio.ingame_bg.pause();
                 
                 app.state = "over";
                 gui.setScene("over");
@@ -466,8 +466,23 @@ $(document).ready(function() {
         requestAnimationFrame(moveBackground);
         
         // Setup looping
-        g.audio.main_bg.loop = true;
-        g.audio.ingame_bg.loop = true;
+        /*g.audio.main_bg.loop = true; // Not working with chromium, wtf.
+        g.audio.ingame_bg.loop = true;*/
+        g.audio.main_bg.addEventListener('ended', function(){
+            this.currentTime = 0;
+            if (window.chrome) // Fucking chrome!
+                this.load();
+            
+            this.play();
+        }, false);
+        
+        g.audio.ingame_bg.addEventListener('ended', function(){
+            this.currentTime = 0;
+            if (window.chrome)
+                this.load();
+            
+            this.play();
+        }, false);
         // Play the fucking background <del>music</del>!
         g.audio.main_bg.play();
     }
