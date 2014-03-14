@@ -38,6 +38,11 @@ $(document).ready(function() {
     };
     initCanvas();
     
+    var splash = {
+        active: true,
+        bg: new Sprite("img/landscape_splash.png")
+    };
+    
     var app = {
         state: "menu",
         step: 0, // Steb for background animation
@@ -53,7 +58,12 @@ $(document).ready(function() {
         play_clock: new Clock(),
         
         // GAME - TARGETS
-        spawns: new Array(new Vector3D(711, 361, 90), new Vector3D(15, 308, 0)), // template: x, y, rotation
+        spawns: new Array(
+                    new Vector3D(711, 361, 90), 
+                    new Vector3D(15, 308, 0),
+                    new Vector3D(672, 199, 45),
+                    new Vector3D(455, 210, -90)
+                ), // template: x, y, rotation
         targets_act: new Array(),
         gen_clock: new Clock(),
         gen_time: 2000, // ms
@@ -83,14 +93,17 @@ $(document).ready(function() {
             bushes: new Sprite("img/bushes.png", new Vector2D(-71, 343))
         },
         audio: {
+            main_bg: new Audio("audio/main.mp3"),
             ingame_bg: new Audio("audio/game_bg.ogg"),
             shot: new Audio("audio/shots/shotgun.wav"),
-            pain: new Audio("audio/pain/pain2.wav")
+            pain: new Audio("audio/pain/pain2.wav"),
+            // Pony scream xD
+            horse_scream: new Audio("audio/ouch.mp3")
         },
         rect: {
             hp_border: new StrokeRect(new Vector2D(680, 10), new Vector2D(110, 30), "white", 1),
             hp_bar: new Rect(new Vector2D(685, 15), new Vector2D(100, 20), "#ff3333")
-        },
+        }
     };
     
     var user = {
@@ -155,6 +168,11 @@ $(document).ready(function() {
         g.targets_act[index].dead = true;
         g.targets_act[index].sprite.setTexture("img/dead_pony.png");
         g.targets_act[index].clock.restart();
+        
+        if(window.chrome)
+            g.audio.horse_scream.load();
+        
+        g.audio.horse_scream.play();
     }
 
     function notKilledTargetPunishment() {
@@ -244,7 +262,7 @@ $(document).ready(function() {
             updateKillTargets();
             if(g.health_points <= 0 && !g.redscreen_active)
             {
-                g.audio.ingame_bg.pause();
+                //g.audio.ingame_bg.pause();
                 
                 app.state = "over";
                 gui.setScene("over");
@@ -344,10 +362,7 @@ $(document).ready(function() {
         app.state = "game";
         gui.setScene("game");
         
-        g.audio.ingame_bg.addEventListener('ended', function() {
-            this.currentTime = 0;
-            this.play();
-        }, false);
+        g.audio.main_bg.pause();
         
         g.audio.ingame_bg.play();
     }
@@ -361,6 +376,8 @@ $(document).ready(function() {
         gui.setScene("pause");
         
         g.audio.ingame_bg.pause();
+        
+        g.audio.main_bg.play();
     }
     
     function onTryAgainButtonClicked() {
@@ -370,10 +387,6 @@ $(document).ready(function() {
         gui.setScene("game");
         
         g.audio.ingame_bg.play();
-        g.audio.ingame_bg.addEventListener('ended', function() {
-            this.currentTime = 0;
-            this.play();
-        }, false);
     }
 
     function onBackButtonClicked() {
@@ -386,10 +399,7 @@ $(document).ready(function() {
         gui.setScene("game");
         
         g.audio.ingame_bg.play();
-        g.audio.ingame_bg.addEventListener('ended', function() {
-            this.currentTime = 0;
-            this.play();
-        }, false);
+        g.audio.main_bg.pause();
     }
 
     function onMenuRestartButtonClicked() {
@@ -398,10 +408,7 @@ $(document).ready(function() {
         gui.setScene("game");
         
         g.audio.ingame_bg.play();
-        g.audio.ingame_bg.addEventListener('ended', function() {
-            this.currentTime = 0;
-            this.play();
-        }, false);
+        g.audio.main_bg.pause();
     }
 
     function initCanvas() {
@@ -436,14 +443,35 @@ $(document).ready(function() {
         gui.addButton(pause_button, "game");
         gui.addButton(try_again_button, "over");
         gui.addButton(restart_button, "pause");
-        gui.addButton(back_button, "pause");        
+        gui.addButton(back_button, "pause");
+    }
+
+    function drawSplash() {
+        if (!splash.active) {
+            init(); // Init game
+            return;
+        }
+        
+        c.ctx.fillStyle = "#000";
+        c.ctx.fillRect(0, 0, c.w, c.h);
+        
+        splash.bg.draw(c.ctx);
+        
+        requestAnimationFrame(drawSplash);
     }
 
     function init() {
         preloadData();
         requestAnimationFrame(paint);
         requestAnimationFrame(moveBackground);
+        
+        // Setup looping
+        g.audio.main_bg.loop = true;
+        g.audio.ingame_bg.loop = true;
+        // Play the fucking background <del>music</del>!
+        g.audio.main_bg.play();
     }
     
-    init();
+    requestAnimationFrame(drawSplash);
+    setTimeout(function() {splash.active = false;}, 2000);
 });
