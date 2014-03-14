@@ -62,11 +62,14 @@ $(document).ready(function() {
                     new Vector3D(711, 361, 90), 
                     new Vector3D(15, 308, 0),
                     new Vector3D(672, 199, 45),
-                    new Vector3D(455, 210, -90)
+                    new Vector3D(455, 210, -90),
+                    new Vector3D(120, 205, 0),
+                    new Vector3D(365, 50, 180),
+                    new Vector3D(455, 345, -90)
                 ), // template: x, y, rotation
         targets_act: new Array(),
         gen_clock: new Clock(),
-        gen_time: 2000, // ms
+        gen_time: 1500, // ms
         autokill_time: 3000, // ms - How many ms killtarget is showed.
         afterkill_time: 200, // ms - after kill time (dead pony time),
         
@@ -83,6 +86,7 @@ $(document).ready(function() {
         /* TEXTS */
         text: {
             score: new Text("Score: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10)),
+            level: new Text("Level: 0", new Font("Ubuntu", 24), "black", new Vector2D(520, 10)),
             time: new Text("Time: 0", new Font("Ubuntu", 24), "black", new Vector2D(10, 10)),
             gameover: new Text("Game Over", new Font("Equestria", 120), "black", new Vector2D(c.w/2, 100)),
             gameover_score: new Text("Your score: ", new Font("Ubuntu", 24), "black", new Vector2D(c.w/2, 220))
@@ -95,6 +99,7 @@ $(document).ready(function() {
         audio: {
             main_bg: new Audio("audio/main.mp3"),
             ingame_bg: new Audio("audio/game_bg.ogg"),
+            gameover: new Audio("audio/game_over.mp3"),
             shot: new Audio("audio/shots/shotgun.wav"),
             pain: new Audio("audio/pain/pain2.wav"),
             // Pony scream xD
@@ -137,6 +142,10 @@ $(document).ready(function() {
                 for(i = 0; i < g.targets_act.length; ++i)
                     if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos))
                         targetEliminate(i);
+                    else {
+                        // You have bad accuracy!
+                        notKilledTargetPunishment();
+                    }
             }
         }
     }
@@ -173,6 +182,12 @@ $(document).ready(function() {
             g.audio.horse_scream.load();
         
         g.audio.horse_scream.play();
+        
+        g.gen_time -= 20; // HAHAH!
+        
+        var act_level = Math.floor((1500-g.gen_time)/50);
+        if(g.gen_time < 1500)
+            g.text.level.string = "Level: " + act_level;
     }
 
     function notKilledTargetPunishment() {
@@ -267,6 +282,15 @@ $(document).ready(function() {
                 app.state = "over";
                 gui.setScene("over");
                 g.time_end_score = Math.round(g.play_clock.getElapsedTime()/100);
+                
+                g.audio.gameover.play();
+                g.audio.gameover.addEventListener('ended', function(){
+                    this.currentTime = 0;
+                    if (window.chrome) // Fucking chrome!
+                        this.load();
+
+                    this.play();
+                }, false);
             }
             
             // Info
@@ -290,6 +314,7 @@ $(document).ready(function() {
             drawScene();
             g.text.score.draw(c.ctx);
             g.text.time.draw(c.ctx);
+            g.text.level.draw(c.ctx);
             drawHpBar();
             
             gui.draw("game");
@@ -352,6 +377,8 @@ $(document).ready(function() {
         g.score = 0;
         g.health_points = 100;
         g.targets_act = new Array();
+        g.gen_time = 1500;
+        g.text.level.string = "Level: 0";
         // Timers
         g.gen_clock.restart();
         g.play_clock.restart();
@@ -386,6 +413,7 @@ $(document).ready(function() {
         app.state = "game";
         gui.setScene("game");
         
+        g.audio.gameover.pause();
         g.audio.ingame_bg.play();
     }
 
@@ -488,5 +516,5 @@ $(document).ready(function() {
     }
     
     requestAnimationFrame(drawSplash);
-    setTimeout(function() {splash.active = false;}, 2000);
+    setTimeout(function() {splash.active = false;}, 1000);
 });
