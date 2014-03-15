@@ -370,6 +370,8 @@ $(document).ready(function() {
             img.src = images[i];
             //c.ctx.drawImage(img, 0, 0, 0, 0);
         }
+        
+        g.audio.shot.load(); // Preload
     }
     
     function restartGame() {
