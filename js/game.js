@@ -45,13 +45,14 @@ $(document).ready(function() {
     
     var app = {
         state: "menu",
-        step: 0, // Steb for background animation
+        step: 0, // Step for background animation
         bg: new Sprite("img/bg.png"),
         bg_cp: new Sprite("img/bg.png", new Vector2D(-c.w, 0))
     };
 
     var menu = {
-        author_text: new Text("2014 by MrPoxipol", new Font("Source Sans Pro", 22), "white", new Vector2D(c.w-170, c.h-35))
+        author_text: new Text("2014 by MrPoxipol", new Font("Source Sans Pro", 22), "white", new Vector2D(c.w-170, c.h-35)),
+        music_info: new Text("To turn off music, you must kill all ponies*", new Font("Source Sans Pro", 12), "white", new Vector2D(5, c.h-20))
     };
     
     var g = {
@@ -80,6 +81,7 @@ $(document).ready(function() {
         redscreen_rect: new Rect(new Vector2D(0, 0), new Vector2D(c.w, c.h), "#FF0000"),
         
         score: 0,
+        level: 0,
         health_points: 100,
         time_end_score: 0,
 
@@ -103,7 +105,10 @@ $(document).ready(function() {
             shot: new Audio("audio/shots/shotgun.wav"),
             pain: new Audio("audio/pain/pain2.wav"),
             // Pony scream xD
-            horse_scream: new Audio("audio/ouch.mp3")
+            horse_scream: new Audio("audio/ouch.mp3"),
+            
+            // Others
+            level_up: new Audio("audio/levelup.ogg")
         },
         rect: {
             hp_border: new StrokeRect(new Vector2D(680, 10), new Vector2D(110, 30), "white", 1),
@@ -123,7 +128,7 @@ $(document).ready(function() {
         this.sprite.rotate(g.spawns[spawn_id].z);
         this.clock = new Clock();
     }
-    // pony :D
+    
     // Events
     function onClick(e) {
         var position = $(c.name).position();
@@ -183,11 +188,31 @@ $(document).ready(function() {
         
         g.audio.horse_scream.play();
         
-        g.gen_time -= 20; // HAHAH!
+        if(g.gen_time > 1000)
+            g.gen_time -= 10; // HAHAH!
         
         var act_level = Math.floor((1500-g.gen_time)/50);
-        if(g.gen_time < 1500)
-            g.text.level.string = "Level: " + act_level;
+        if(g.gen_time < 1500) {
+            if(g.level < act_level) {
+                // Level up!
+                if(window.chrome)
+                    g.audio.level_up.load();
+
+                g.audio.level_up.play();
+                
+                g.level = act_level;
+            }
+        }
+        
+        // Prize
+        if (g.health_points < 100) {
+            var max = 100 - g.health_points;
+            if (max > 30)
+                max = 30;
+            
+            if (max > 5)
+                g.health_points += getRandomInt(5, max);
+        }
     }
 
     function notKilledTargetPunishment() {
@@ -295,6 +320,7 @@ $(document).ready(function() {
             
             // Info
             g.text.score.string = "Score: " + g.score;
+            g.text.level.string = "Level: " + g.level;
             g.text.time.pos.x = g.text.score.getSize(c.ctx).x + 20;
             g.text.time.string = "Time: " + Math.round(g.play_clock.getElapsedTime()/1000);
             g.rect.hp_bar.size.x = g.health_points;
@@ -357,8 +383,10 @@ $(document).ready(function() {
             gui.draw("over");
         }
         
-        if (app.state !== "game")
+        if (app.state !== "game") {
             menu.author_text.draw(c.ctx);
+            menu.music_info.draw(c.ctx);
+        }
         
         requestAnimationFrame(paint);
     }
@@ -380,7 +408,7 @@ $(document).ready(function() {
         g.health_points = 100;
         g.targets_act = new Array();
         g.gen_time = 1500;
-        g.text.level.string = "Level: 0";
+        g.level = 0;
         // Timers
         g.gen_clock.restart();
         g.play_clock.restart();
