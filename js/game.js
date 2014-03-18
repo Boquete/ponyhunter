@@ -84,6 +84,8 @@ $(document).ready(function() {
         level: 0,
         health_points: 100,
         time_end_score: 0,
+        
+        dead_target_texts: new Array(),
 
         /* TEXTS */
         text: {
@@ -119,6 +121,32 @@ $(document).ready(function() {
     var user = {
         shoted: false
     };
+    
+    function DeadText(target_pos) {
+        this.text = new Text("+" + TARGET_COST,
+                            new Font("Ubuntu", 24),
+                            new Color(231, 25, 25),
+                            new Vector2D(target_pos.x + 15, target_pos.y - 30));
+        
+        var anim_y = this.text.pos.y - 50;
+        var anim_a = 0;
+        
+        var self = this;
+        
+        this.remove = false;
+        
+        createjs.Tween.get(this.text.pos)
+                .to({y: anim_y}, 400);
+        createjs.Tween.get(this.text.color)
+                .to({a: anim_a}, 400)
+                .call(function() {
+                    self.remove = true;
+                });
+        
+        this.draw = function (ctx) {
+            this.text.draw(ctx);
+        };
+    }
     
     function KillTarget(spawn_id) {
         this.dead = false;
@@ -188,6 +216,9 @@ $(document).ready(function() {
         
         g.audio.horse_scream.play();
         
+        // Show after-dead-text (ie +50)
+        g.dead_target_texts.push(new DeadText(g.targets_act[index].sprite.pos));
+        
         if(g.gen_time > 1000)
             g.gen_time -= 10; // HAHAH!
         
@@ -247,11 +278,29 @@ $(document).ready(function() {
                 to_delete.push(i);
         }
         
-        for(i in to_delete) {
+        for(var i in to_delete) {
             if(!g.targets_act[i].dead)
                 notKilledTargetPunishment();
             
             g.targets_act.splice(i, 1);
+        }
+    }
+
+    function updateDeadTexts() {
+        var to_delete = new Array();
+        for (var i in g.dead_target_texts) {
+            if(g.dead_target_texts[i].remove)
+                to_delete.push(i);
+        }
+        
+        for(var i in to_delete) {
+            g.dead_target_texts.splice(i, 1);
+        }
+    }
+
+    function drawDeadTexts() {
+        for (var i in g.dead_target_texts) {
+            g.dead_target_texts[i].draw(c.ctx);
         }
     }
 
@@ -300,6 +349,7 @@ $(document).ready(function() {
             }
 
             updateKillTargets();
+            updateDeadTexts();
             if(g.health_points <= 0 && !g.redscreen_active)
             {
                 g.audio.ingame_bg.pause();
@@ -344,6 +394,7 @@ $(document).ready(function() {
             drawHpBar();
             
             gui.draw("game");
+            drawDeadTexts();
             
             if(g.redscreen_active) {
                 // Transparent
