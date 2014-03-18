@@ -123,7 +123,11 @@ function Text(string, font, color, pos) {
     };
     this.draw = function(ctx) {
         ctx.font = this.font;
-        ctx.fillStyle = this.color;
+        if (typeof(this.color) === "string")
+            ctx.fillStyle = this.color;
+        else
+            ctx.fillStyle = this.color.toCSS();
+        
         ctx.fillText(this.string, this.pos.x, this.pos.y);
     };
 }
@@ -197,13 +201,12 @@ function Color(r, g, b, a) {
     
     this.b = b;
     if (typeof(a) === 'undefined')
-        this.a = 255;
+        this.a = 1;
+    else
+        this.a = a;
     
     this.toCSS = function() {
-        /* Opacity have arleady no support :D 
-         * TODO: add opacity: a;
-         */
-        return "rgb(" + r + ", " + g + ", " + b + ")";
+        return "rgba(" + this.r + ", " + this.g + ", " + this.b + ", " + this.a + ")";
     };
 }
 // Random
