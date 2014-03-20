@@ -72,7 +72,7 @@ $(document).ready(function() {
                 ), // template: x, y, rotation
         targets_act: new Array(),
         gen_clock: new Clock(),
-        gen_time: 1500, // ms
+        gen_time: 900, // ms
         autokill_time: 3000, // ms - How many ms killtarget is showed.
         afterkill_time: 200, // ms - after kill time (dead pony time),
         
@@ -120,10 +120,6 @@ $(document).ready(function() {
         }
     };
     
-    var user = {
-        shoted: false
-    };
-    
     function DeadText(target_pos) {
         this.text = new Text("+" + TARGET_COST,
                             new Font("Ubuntu", 24),
@@ -164,28 +160,26 @@ $(document).ready(function() {
         var position = $(c.name).position();
         var mpos = new Vector2D(e.pageX - position.left + c.cursor_size/2, e.pageY - position.top + c.cursor_size/2);
         
-        if (g.audio.shot.ended || !user.shoted) {
-            /* Chrome 'bug' 
-             * Info: http://stackoverflow.com/a/8959342/2221315*/
-            if(window.chrome)
-                g.audio.shot.load();
-            
-            g.audio.shot.play();
-            user.shoted = true;
-            if(app.state === "game") {
-                // Shoting
-                for(i = 0; i < g.targets_act.length; ++i)
-                    if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos))
-                        targetEliminate(i);
-                    /*else {
-                        // You have bad accuracy!
-                        notKilledTargetPunishment();
-                    }*/
-            } else if (app.state !== "over") {
-                // Mute button logic
-                if (menu.mute_icon.getGlobalBounds().contains(mpos))
-                    onMuteButtonClicked();
-            }
+        /* Chrome 'bug' 
+         * Info: http://stackoverflow.com/a/8959342/2221315*/
+        if(window.chrome)
+            g.audio.shot.load();
+
+        g.audio.shot.play();
+        if(app.state === "game") {
+            // Shoting
+            for(i = 0; i < g.targets_act.length; ++i)
+                if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos))
+                    targetEliminate(i);
+                /*else {
+                    // You have bad accuracy!
+                    notKilledTargetPunishment();
+                }*/
+        }
+        if (app.state !== "game" && app.state !== "over") {
+            // Mute button logic
+            if (menu.mute_icon.getGlobalBounds().contains(mpos))
+                onMuteButtonClicked();
         }
     }
 
@@ -212,6 +206,10 @@ $(document).ready(function() {
     }
 
     function targetEliminate(index) {
+        // Block
+        if (g.targets_act[index].dead)
+            return; // Target've arleady killed!
+        
         g.score += TARGET_COST;
         g.targets_act[index].dead = true;
         g.targets_act[index].sprite.setTexture("img/dead_pony.png");
@@ -225,11 +223,13 @@ $(document).ready(function() {
         // Show after-dead-text (ie +50)
         g.dead_target_texts.push(new DeadText(g.targets_act[index].sprite.pos));
         
-        if(g.gen_time > 1000)
-            g.gen_time -= 10; // HAHAH!
+        if(g.gen_time > 600)
+            g.gen_time -= 20; // HAHAH!
+        else if(g.gen_time > 500)
+            g.gen_time -= 10;
         
-        var act_level = Math.floor((1500-g.gen_time)/50);
-        if(g.gen_time < 1500) {
+        var act_level = Math.floor((900-g.gen_time)/50);
+        if(g.gen_time < 900) {
             if(g.level < act_level) {
                 // Level up!
                 if(window.chrome)
@@ -243,12 +243,8 @@ $(document).ready(function() {
         
         // Prize
         if (g.health_points < 100) {
-            var max = 100 - g.health_points;
-            if (max > 30)
-                max = 30;
-            
-            if (max > 5)
-                g.health_points += getRandomInt(5, max);
+            if (g.health_points+5 < 100)
+                g.health_points += getRandomInt(1, 5);
         }
     }
 
@@ -267,6 +263,8 @@ $(document).ready(function() {
         else
             g.audio.pain.play();
         
+        if (g.redscreen_active)
+            return;
         
         g.redscreen_active = true;
         g.redscreen_clock.restart();
@@ -327,7 +325,7 @@ $(document).ready(function() {
     }
     
     function moveBackground() {
-        app.step += 0.5;
+        app.step += g.level === 0 ? 0.5 : g.level*2;
         app.bg.pos.x = -(app.step*0.6);
         app.bg.pos.x %= c.w*2;
         if(app.bg.pos.x < 0) app.bg.pos.x += c.w*2;
@@ -440,7 +438,7 @@ $(document).ready(function() {
             gui.draw("over");
         }
         
-        if (app.state !== "game") {
+        if (app.state !== "game" && app.state !== "over") {
             menu.author_text.draw(c.ctx);
             menu.music_info.draw(c.ctx);
             
@@ -465,7 +463,7 @@ $(document).ready(function() {
         g.score = 0;
         g.health_points = 100;
         g.targets_act = new Array();
-        g.gen_time = 1500;
+        g.gen_time = 900;
         g.level = 0;
         // Timers
         g.gen_clock.restart();
