@@ -52,7 +52,9 @@ $(document).ready(function() {
 
     var menu = {
         author_text: new Text("2014 by MrPoxipol", new Font("Source Sans Pro", 22), "white", new Vector2D(c.w-170, c.h-35)),
-        music_info: new Text("To turn off music, you must kill all ponies*", new Font("Source Sans Pro", 12), "white", new Vector2D(5, c.h-20))
+        music_info: new Text("To turn off music, you must kill all ponies*", new Font("Source Sans Pro", 12), "white", new Vector2D(5, c.h-20)),
+    
+        mute_icon: new Sprite("img/sound.png", new Vector2D(10, 425))
     };
     
     var g = {
@@ -179,6 +181,10 @@ $(document).ready(function() {
                         // You have bad accuracy!
                         notKilledTargetPunishment();
                     }
+            } else if (app.state !== "over") {
+                // Mute button logic
+                if (menu.mute_icon.getGlobalBounds().contains(mpos))
+                    onMuteButtonClicked();
             }
         }
     }
@@ -437,6 +443,8 @@ $(document).ready(function() {
         if (app.state !== "game") {
             menu.author_text.draw(c.ctx);
             menu.music_info.draw(c.ctx);
+            
+            menu.mute_icon.draw(c.ctx);
         }
         
         requestAnimationFrame(paint);
@@ -447,7 +455,6 @@ $(document).ready(function() {
         for(var i in images) {
             var img = new Image();
             img.src = images[i];
-            //c.ctx.drawImage(img, 0, 0, 0, 0);
         }
         
         g.audio.shot.load(); // Preload
@@ -518,6 +525,28 @@ $(document).ready(function() {
         
         g.audio.ingame_bg.play();
         g.audio.main_bg.pause();
+    }
+
+    function setMute(mute) {
+        for(var i in g.audio) {
+            console.log(g.audio);
+            g.audio[i].muted = mute;
+        }
+    }
+
+    function onMuteButtonClicked() {
+        var muted = g.audio.main_bg.muted; // If first item is muted, others also should be muted
+        
+        if (muted) {
+            // Unmute
+            menu.mute_icon.img.src = "img/sound.png";
+            setMute(false);
+        }
+        else {
+            // Mute
+            menu.mute_icon.img.src = "img/mute.png";
+            setMute(true);
+        }
     }
 
     function initCanvas() {
