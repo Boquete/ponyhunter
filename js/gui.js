@@ -89,6 +89,12 @@ var gui = {
         
         this.actual_scene = scene;
     },
+    getButtonByText: function(text) {
+        for (var i in this.buttons) {
+            if (this.buttons[i].text.string === text)
+                return this.buttons[i];
+        }
+    },
     addButton: function(object, scene) {
         this.buttons.push(object);
         this.buttons[this.buttons.length - 1].scene = scene;
@@ -124,6 +130,9 @@ function Button(string, pos) {
     this.click_cb = null;
     
     // Methods
+    this.setText = function(text) {
+        this.text.string = text;
+    };
     this.draw = function() {
         this.body.draw(gui.canvas_ctx);
         this.border.draw(gui.canvas_ctx);
