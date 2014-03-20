@@ -177,10 +177,10 @@ $(document).ready(function() {
                 for(i = 0; i < g.targets_act.length; ++i)
                     if(g.targets_act[i].sprite.getGlobalBounds().contains(mpos))
                         targetEliminate(i);
-                    else {
+                    /*else {
                         // You have bad accuracy!
                         notKilledTargetPunishment();
-                    }
+                    }*/
             } else if (app.state !== "over") {
                 // Mute button logic
                 if (menu.mute_icon.getGlobalBounds().contains(mpos))
